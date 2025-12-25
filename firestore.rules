@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function hasField(fieldName) {
+      return resource.data.keys().hasAny([fieldName]);
+    }
+
+    function isPublicService() {
+      return (
+        (hasField('status') && resource.data.status == true) ||
+        (!hasField('status') && hasField('isActive') && resource.data.isActive == true) ||
+        (!hasField('status') && !hasField('isActive'))
+      );
+    }
+
+    function hasValidServiceData() {
+      return request.resource.data.keys().hasOnly([
+        'title',
+        'shortDescription',
+        'features',
+        'startingPrice',
+        'icon',
+        'status',
+        'createdAt',
+        'updatedAt'
+      ])
+      && request.resource.data.title is string
+      && request.resource.data.shortDescription is string
+      && request.resource.data.features is list
+      && request.resource.data.startingPrice is number
+      && request.resource.data.icon is string
+      && request.resource.data.status is bool
+      && request.resource.data.createdAt is timestamp
+      && request.resource.data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /services/{serviceId} {
+      allow list: if true;
+      allow get: if isAdmin() || isPublicService();
+
+      allow create: if isAdmin() && hasValidServiceData();
+
+      allow update: if isAdmin() && hasValidServiceData();
+
+      allow delete: if isAdmin();
+    }
+
+    match /contact_messages/{messageId} {
+      allow create: if true;
+      allow list, get: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    match /gallery/{itemId} {
+      allow read: if true;
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+  }
+}
