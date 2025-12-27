@@ -1,0 +1,529 @@
+import { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination, Navigation, EffectFade } from 'swiper/modules';
+import { collection, getDocs, limit, query, onSnapshot, where } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import WavyDivider from '../components/WavyDivider';
+import SectionTitle from '../components/SectionTitle';
+import Button from '../components/Button';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { FaArrowRight, FaStar } from 'react-icons/fa';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+import 'swiper/css/effect-fade';
+import ThreeHeroBackground from "../components/ThreeHeroBackground";
+
+
+const Home = () => {
+  const [services, setServices] = useState([]);
+  const [gallery, setGallery] = useState([]);
+  const [testimonials, setTestimonials] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const servicesQuery = query(collection(db, 'services'), limit(6));
+        const servicesSnap = await getDocs(servicesQuery);
+        setServices(servicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } catch (error) {
+        console.error('Error fetching services:', error);
+      }
+    };
+
+    const fetchTestimonials = async () => {
+      try {
+        const testimonialsQuery = query(collection(db, 'testimonials'), limit(5));
+        const testimonialsSnap = await getDocs(testimonialsQuery);
+        setTestimonials(testimonialsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } catch (error) {
+        console.error('Error fetching testimonials:', error);
+      }
+    };
+
+    fetchServices();
+    fetchTestimonials();
+
+    // Real-time gallery listener
+    const galleryQuery = query(
+      collection(db, 'gallery'),
+      where('status', '==', true),
+      limit(8)
+    );
+    
+    const unsubscribe = onSnapshot(
+      galleryQuery,
+      (snapshot) => {
+        const galleryData = snapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          ...doc.data() 
+        }));
+        setGallery(galleryData);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching gallery:', error);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  const bannerImages = [
+    '/assets/banner/WhatsApp Image1.jpeg',
+    '/assets/banner/WhatsApp Image2.jpeg',
+    '/assets/banner/WhatsApp Image3.jpeg',
+    '/assets/banner/WhatsApp Image4.jpeg',
+  ];
+
+  const statsData = [
+    { value: '500+', label: 'Projects Delivered' },
+    { value: '120+', label: 'Brands Partnered' },
+    { value: '25+', label: 'Industry Awards' },
+    { value: '98%', label: 'Client Satisfaction' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-bgMain">
+      
+      <section className="relative h-screen overflow-hidden bg-gradient-to-br from-primary via-primaryDark to-slate-800">
+        <Swiper
+          modules={[Autoplay, Pagination, Navigation, EffectFade]}
+          effect="fade"
+          autoplay={{ delay: 5000, disableOnInteraction: false }}
+          pagination={{ clickable: true }}
+          navigation
+          loop
+          className="h-full"
+        >
+          {bannerImages.map((image, index) => (
+            <SwiperSlide key={index}>
+              <div className="relative h-full">
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-900/70 via-slate-900/50 to-transparent z-10" />
+                <div className="absolute top-0 left-0 w-1/2 h-1/2 bg-primary/20 triangle-top-left animate-float-slow hidden lg:block" />
+                <div className="absolute bottom-0 right-0 w-[60%] h-[45%] bg-triangleOrange/30 triangle-bottom-right animate-float hidden lg:block" />
+                <div className="absolute bottom-0 right-0 w-[45%] h-[30%] bg-primaryDark/40 triangle-bottom-right animate-float-slow hidden lg:block" />
+                <img
+                  src={image}
+                  alt={`Banner ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                {/* <ThreeHeroBackground image={image} /> */}
+                <div className="absolute inset-0 z-20 flex items-center justify-center">
+                  <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                    <motion.h1
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2, duration: 0.8 }}
+                      className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 drop-shadow-lg"
+                    >
+                      Transform Your Digital Presence
+                    </motion.h1>
+                    <motion.p
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4, duration: 0.8 }}
+                      className="text-lg sm:text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto"
+                    >
+                      Premium digital solutions crafted for modern businesses
+                    </motion.p>
+                    <motion.div
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6, duration: 0.8 }}
+                      className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+                    >
+                      <Button to="/services" size="lg">
+                        Explore Services
+                      </Button>
+                      <Button to="/contact" variant="outline" size="lg" className="text-white border-white hover:bg-white hover:text-textPrimary">
+                        Get Started
+                      </Button>
+                    </motion.div>
+                  </div>
+                </div>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+        <WavyDivider className="absolute bottom-0 left-0 right-0 z-30" color="#ebf1f5" />
+      </section>
+      <section className="relative py-12 sm:py-16 lg:py-20 bg-bgMain overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-triangleOrange/5 rounded-full blur-3xl" />
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+            {statsData.map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                className="bg-white rounded-2xl p-8 text-center shadow-card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1"
+              >
+                <p className="text-3xl sm:text-4xl font-extrabold text-primary tracking-tight mb-2">
+                  {stat.value}
+                </p>
+                <p className="text-textMuted text-sm sm:text-base">
+                  {stat.label}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="relative py-16 sm:py-20 lg:py-24 bg-white overflow-hidden">
+        <WavyDivider className="absolute top-0 left-0 right-0" flip color="#ebf1f5" />
+        <div className="absolute top-20 right-10 w-96 h-96 bg-primary/5 triangle-top-left hidden lg:block" />
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionTitle
+            subtitle="What We Offer"
+            title="Our Premium Services"
+          />
+          
+          {loading ? (
+            <LoadingSpinner />
+          ) : services.length > 0 ? (
+            <Swiper
+              modules={[Autoplay, Pagination, Navigation]}
+              spaceBetween={24}
+              slidesPerView={1}
+              breakpoints={{
+                640: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+              }}
+              autoplay={{ delay: 3500, disableOnInteraction: false }}
+              pagination={{ clickable: true }}
+              navigation
+              className="pb-12"
+            >
+              {services.map((service, index) => (
+                <SwiperSlide key={service.id}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1, duration: 0.6 }}
+                    whileHover={{ y: -8, scale: 1.02 }}
+                    className="bg-white rounded-2xl p-8 shadow-card hover:shadow-premium transition-all duration-500 h-full flex flex-col"
+                  >
+                    <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/5 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                      <span className="text-2xl sm:text-3xl">{service.icon || '🚀'}</span>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-bold text-textPrimary mb-3">
+                      {service.title}
+                    </h3>
+                    <p className="text-textSecondary mb-6 leading-relaxed flex-grow">
+                      {service.shortDescription}
+                    </p>
+                    {service.startingPrice && (
+                      <p className="text-primary font-bold text-xl sm:text-2xl mb-4">
+                        Starting from ₹{service.startingPrice}
+                      </p>
+                    )}
+                    <Button variant="ghost" className="group mt-auto">
+                      Learn More
+                      <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </motion.div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-textMuted text-lg">No services available yet.</p>
+            </div>
+          )}
+
+          <div className="text-center mt-12">
+            <Button to="/services" size="lg">
+          </div>
+        )}
+
+        <div className="text-center mt-12">
+          <Button to="/services" size="lg">
+            View All Services
+          </Button>
+        </div>
+      </div>
+    </section>
+    <section className="relative py-16 sm:py-20 lg:py-24 bg-bgMain overflow-hidden">
+      <WavyDivider className="absolute top-0 left-0 right-0" flip color="#ffffff" />
+      <div className="absolute bottom-10 left-10 w-72 h-72 bg-primary/5 triangle-bottom-right hidden lg:block" />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionTitle
+          subtitle="Our Work"
+          title="Gallery Showcase"
+        />
+        
+        {loading ? (
+          <LoadingSpinner />
+        ) : gallery.length > 0 ? (
+          <Swiper
+            modules={[Autoplay, Pagination]}
+            spaceBetween={20}
+            slidesPerView={1}
+            breakpoints={{
+              640: { slidesPerView: 2 },
+              1024: { slidesPerView: 3 },
+              1280: { slidesPerView: 4 },
+            }}
+            autoplay={{ delay: 3000 }}
+            pagination={{ clickable: true }}
+            className="pb-12"
+          >
+            {gallery.map((item, index) => (
+              <SwiperSlide key={item.id}>
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05, duration: 0.5 }}
+                  whileHover={{ scale: 1.02 }}
+                  className="relative aspect-square rounded-2xl overflow-hidden bg-white shadow-card hover:shadow-card-hover cursor-pointer transition-all duration-300"
+                >
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title || 'Gallery'}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                    <h4 className="text-white font-semibold text-lg">
+                      {item.title}
+                    </h4>
+                  </div>
+                </motion.div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-textMuted text-lg">No gallery items available yet.</p>
+          </div>
+        )}
+
+        <div className="text-center mt-8">
+          <Button to="/gallery" variant="outline" size="lg">
+            View Full Gallery
+          </Button>
+        </div>
+      </div>
+    </section>
+    <section className="relative py-16 sm:py-20 lg:py-24 bg-white overflow-hidden">
+      <WavyDivider className="absolute top-0 left-0 right-0" flip color="#ebf1f5" />
+      <div className="absolute top-0 left-0 w-80 h-80 bg-triangleOrange/5 triangle-top-left hidden lg:block" />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <SectionTitle
+          subtitle="Client Reviews"
+          title="What Our Clients Say"
+        />
+
+        {loading ? (
+          <LoadingSpinner />
+        ) : testimonials.length > 0 ? (
+          <Swiper
+            modules={[Autoplay, Pagination]}
+            spaceBetween={30}
+            slidesPerView={1}
+            breakpoints={{
+              768: { slidesPerView: 2 },
+              1024: { slidesPerView: 3 },
+            }}
+            autoplay={{ delay: 4000 }}
+            pagination={{ clickable: true }}
+            className="pb-12"
+          >
+            {testimonials.map((testimonial) => (
+              <SwiperSlide key={testimonial.id}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  className="bg-white rounded-2xl p-8 h-full shadow-card hover:shadow-card-hover transition-all duration-300"
+                >
+                  <div className="flex items-center mb-4">
+                    {[...Array(5)].map((_, i) => (
+                      <FaStar
+                        key={i}
+                        className={`w-5 h-5 ${
+                          i < (testimonial.rating || 5)
+                            ? 'text-primary'
+                            : 'text-borderColor'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-textSecondary mb-6 leading-relaxed italic">
+                    "{testimonial.message}"
+                  </p>
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-lg mr-4">
+                      {testimonial.name?.charAt(0) || 'A'}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-textPrimary">
+                        {testimonial.name}
+          {loading ? (
+            <LoadingSpinner />
+          ) : gallery.length > 0 ? (
+            <Swiper
+              modules={[Autoplay, Pagination]}
+              spaceBetween={20}
+              slidesPerView={1}
+              breakpoints={{
+                640: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+                1280: { slidesPerView: 4 },
+              }}
+              autoplay={{ delay: 3000 }}
+              pagination={{ clickable: true }}
+              className="pb-12"
+            >
+              {gallery.map((item, index) => (
+                <SwiperSlide key={item.id}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.05, duration: 0.5 }}
+                    whileHover={{ scale: 1.02 }}
+                    className="relative aspect-square rounded-2xl overflow-hidden bg-white shadow-card hover:shadow-card-hover cursor-pointer transition-all duration-300"
+                  >
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title || 'Gallery'}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+                      <h4 className="text-white font-semibold text-lg">
+                        {item.title}
+                      </h4>
+                    </div>
+                  </motion.div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-textMuted text-lg">No gallery items available yet.</p>
+            </div>
+          )}
+
+          <div className="text-center mt-8">
+            <Button to="/gallery" variant="outline" size="lg">
+              View Full Gallery
+            </Button>
+          </div>
+        </div>
+      </section>
+      <section className="relative py-16 sm:py-20 lg:py-24 bg-white overflow-hidden">
+        <WavyDivider className="absolute top-0 left-0 right-0" flip color="#ebf1f5" />
+        <div className="absolute top-0 left-0 w-80 h-80 bg-triangleOrange/5 triangle-top-left hidden lg:block" />
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionTitle
+            subtitle="Client Reviews"
+            title="What Our Clients Say"
+          />
+
+          {loading ? (
+            <LoadingSpinner />
+          ) : testimonials.length > 0 ? (
+            <Swiper
+              modules={[Autoplay, Pagination]}
+              spaceBetween={30}
+              slidesPerView={1}
+              breakpoints={{
+                768: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+              }}
+              autoplay={{ delay: 4000 }}
+              pagination={{ clickable: true }}
+              className="pb-12"
+            >
+              {testimonials.map((testimonial) => (
+                <SwiperSlide key={testimonial.id}>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    className="bg-white rounded-2xl p-8 h-full shadow-card hover:shadow-card-hover transition-all duration-300"
+                  >
+                    <div className="flex items-center mb-4">
+                      {[...Array(5)].map((_, i) => (
+                        <FaStar
+                          key={i}
+                          className={`w-5 h-5 ${
+                            i < (testimonial.rating || 5)
+                              ? 'text-primary'
+                              : 'text-borderColor'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <p className="text-textSecondary mb-6 leading-relaxed italic">
+                      "{testimonial.message}"
+                    </p>
+                    <div className="flex items-center">
+                      <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-lg mr-4">
+                        {testimonial.name?.charAt(0) || 'A'}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-textPrimary">
+                          {testimonial.name}
+                        </h4>
+                        <p className="text-sm text-textMuted">
+                          {testimonial.position || 'Client'}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-textMuted text-lg">No testimonials available yet.</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      <section className="relative py-20 sm:py-24 lg:py-32 bg-gradient-to-br from-primary/5 via-bgMain to-primary/10 overflow-hidden">
+        <WavyDivider className="absolute top-0 left-0 right-0" flip color="#ffffff" />
+        <div className="absolute top-0 right-0 w-[50%] h-[60%] bg-primary/10 triangle-top-left hidden lg:block animate-float-slow" />
+        <div className="absolute bottom-0 left-0 w-[40%] h-[50%] bg-triangleOrange/10 triangle-bottom-right hidden lg:block animate-float" />
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8 }}
+          >
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-textPrimary mb-6">
+              Ready to Start Your Project?
+            </h2>
+            <p className="text-lg sm:text-xl text-textSecondary mb-8 max-w-2xl mx-auto">
+              Let's create something amazing together. Get in touch with our team today.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button to="/contact" size="lg">
+                Contact Us Now
+              </Button>
+              <Button to="/pricing" variant="outline" size="lg">
+                View Pricing
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+        <WavyDivider className="absolute bottom-0 left-0 right-0" color="#111827" />
+      </section>
+    </div>
+  );
+};
+
+export default Home;
