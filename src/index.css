@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: "Inter", sans-serif;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-heading {
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+.blob-shape {
+  position: absolute;
+  filter: blur(60px);
+  z-index: 0;
+  opacity: 0.6;
+}
+
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-image: linear-gradient(135deg, #4f46e5 0%, #ec4899 100%);
+}
+
+.bg-glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.pattern-diagonal {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(79, 70, 229, 0.03) 0,
+    rgba(79, 70, 229, 0.03) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+.pattern-diagonal-light {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.05) 0,
+    rgba(255, 255, 255, 0.05) 10px,
+    transparent 10px,
+    transparent 20px
+  );
+}
+
+.shape-blob-1 {
+  border-radius: 46% 54% 39% 61%/55% 26% 74% 45%;
+}
+
+.material-symbols-outlined.filled {
+  font-variation-settings: "FILL" 1;
+}
+
+.clip-diagonal {
+  clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%);
+}
+
+.clip-diagonal-reverse {
+  clip-path: polygon(0 15%, 100% 0, 100% 100%, 0 100%);
+}
+
+.bg-grid-pattern {
+  background-image: radial-gradient(#4f46e5 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.05;
+}
